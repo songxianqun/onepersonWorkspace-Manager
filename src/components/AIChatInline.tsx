@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Send, Sparkles, ArrowUp, Bot } from "lucide-react"
+import { Send, Sparkles, ArrowUp } from "lucide-react"
 import { useChatContext } from "@/App"
 
 interface Message {

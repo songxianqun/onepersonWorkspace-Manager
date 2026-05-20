@@ -1,10 +1,13 @@
 import { useState, useRef, createContext, useContext, useCallback } from "react"
+import { cn } from "@/lib/utils"
 import { Header } from "@/components/Header"
 import { WorkTips } from "@/components/WorkTips"
 import { AIAssistants } from "@/components/AIAssistants"
 import { AIChatInline } from "@/components/AIChatInline"
 import { AIChatInput } from "@/components/AIChatInput"
-import { ArrowUp } from "lucide-react"
+import { SupportPage } from "@/pages/SupportPage"
+import { CollabPage } from "@/pages/CollabPage"
+import { ArrowUp, Briefcase, HeadphonesIcon, Users2 } from "lucide-react"
 
 interface ChatContextType {
   isInChat: boolean
@@ -28,7 +31,16 @@ export function useChatContext() {
   return useContext(ChatContext)
 }
 
+type EndTab = "employee" | "support" | "collab"
+
+const endTabs: Array<{ id: EndTab; label: string; sub: string; icon: typeof Briefcase }> = [
+  { id: "employee", label: "员工端", sub: "个人工作台", icon: Briefcase },
+  { id: "support", label: "业务支持端", sub: "支持中心", icon: HeadphonesIcon },
+  { id: "collab", label: "协同端", sub: "经营协同", icon: Users2 },
+]
+
 function App() {
+  const [activeEnd, setActiveEnd] = useState<EndTab>("employee")
   const [chatState, setChatState] = useState({
     isInChat: false,
     agentName: "",
@@ -62,20 +74,66 @@ function App() {
 
   return (
     <ChatContext.Provider value={{ ...chatState, openChat, exitChat }}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <div ref={topRef} />
 
-        {/* Workbench content */}
-        <div className={chatState.isInChat ? "hidden" : ""}>
-          <Header />
-          <WorkTips />
-          <AIAssistants />
-          <AIChatInput />
-        </div>
+        {/* 三端切换 Tab（顶部全局导航） */}
+        {!chatState.isInChat && (
+          <div className="border-b border-border bg-card shrink-0">
+            <div className="max-w-[1200px] mx-auto px-8 flex items-center gap-0">
+              {endTabs.map((tab) => {
+                const Icon = tab.icon
+                const isActive = activeEnd === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveEnd(tab.id)}
+                    className={cn(
+                      "flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-all -mb-px",
+                      isActive
+                        ? "text-primary border-primary"
+                        : "text-muted-foreground border-transparent hover:text-foreground hover:border-border"
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{tab.label}</span>
+                    <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                      {tab.sub}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 员工端 */}
+        {!chatState.isInChat && activeEnd === "employee" && (
+          <div className="flex-1">
+            <Header />
+            <WorkTips />
+            <AIAssistants />
+            <AIChatInput />
+          </div>
+        )}
+
+        {/* 业务支持端 */}
+        {!chatState.isInChat && activeEnd === "support" && (
+          <div className="flex-1 overflow-hidden flex flex-col" style={{ height: "calc(100vh - 57px)" }}>
+            <SupportPage />
+          </div>
+        )}
+
+        {/* 协同端 */}
+        {!chatState.isInChat && activeEnd === "collab" && (
+          <div className="flex-1">
+            <CollabPage />
+          </div>
+        )}
 
         {/* Inline chat view */}
         {chatState.isInChat && (
-          <div ref={chatRef}>
+          <div ref={chatRef} className="flex-1">
             <AIChatInline />
           </div>
         )}
